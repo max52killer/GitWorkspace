@@ -1,0 +1,63 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+   <!-- 打开自动扫描，会自动打开注解装配 -->
+   <context:component-scan base-package="edu.cc.sshe">
+      <!-- 不扫描标注了@Controller注解的类，在与struts2整合时不要该配置 -->
+      <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+   </context:component-scan>
+     
+   <!-- 整合Hibernate --> 
+   <!-- 注册BeanFactoryPostProcessor完成配置信息中${}内容的替换 -->
+   <context:property-placeholder location="classpath:jdbc.properties"/>
+   <!-- 创建数据源 -->
+   <bean id="dataSource" 
+         class="org.apache.commons.dbcp.BasicDataSource" 
+         destroy-method="close"
+		 p:driverClassName="${jdbc.driverClassName}" 
+		 p:url="${jdbc.url}" 
+		 p:username="${jdbc.username}"
+		p:password="${jdbc.password}"/>  
+		
+	<!-- 创建SessionFactory -->	      
+   <bean id="sessionFactory" 
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+		  p:dataSource-ref="dataSource">
+		  
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<!-- <prop key="hibernate.generate_statistics">${hibernate.generate_statistics}</prop> -->
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+			</props>
+		</property>		
+	    <property name="packagesToScan">
+	      <array>
+	       <value>edu.cc.sshe.framework.domain</value>
+	       <value>edu.cc.sshe.org.domain</value>
+	       </array>
+	    </property>
+	</bean> 
+   
+   <!-- 声明式的事务管理 -->
+   <bean id="transactionManager" 
+         class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+		 p:sessionFactory-ref="sessionFactory"/>   
+	
+	<!-- 注解驱动的事务管理 -->	 
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>  
+	     
+</beans>
