@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+    "http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+	<!-- 设置struts使用的字符集 -->
+	<constant name="struts.i18n.encoding" value="UTF-8"></constant>
+	<!-- 开发模式 -->
+	<constant name="struts.devMode" value="true"></constant>
+	<!-- 允许action名称使用/ -->
+    <constant name="struts.enable.SlashesInActionNames" value="true"></constant>
+	<!-- 设置action支持动态方法调用，不建议使用 -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true"></constant>
+	<!-- action请求后缀 -->
+	<constant name="struts.action.extension" value="action,do,,"></constant>
+	
+	 <!-- 指定Struts2的对象工厂为spring -->
+     <constant name="struts.objectFactory" value="spring" />
+     
+	<package name="address" extends="struts-default" namespace="/">
+	  
+	    
+	    <interceptors>
+	       <interceptor name="permission" class="edu.cc.address.web.struts2.interceptor.PermissionInterceptor">
+	           <param name="excludes">randomCode,login_*</param>
+	       </interceptor>
+	       
+	       <interceptor-stack name="permissionStack">
+	           <interceptor-ref name="defaultStack"></interceptor-ref>
+	           <interceptor-ref name="permission"></interceptor-ref>
+	       </interceptor-stack>
+	    </interceptors>
+	    
+	    <default-interceptor-ref name="permissionStack"></default-interceptor-ref>
+	    
+	    <global-results>
+	        <result name="login" type="redirectAction">login_page</result>
+	    </global-results>
+	    
+	   
+	    <global-allowed-methods>page,create,execute,list,delete,update,add,preAdd,preEdit,edit,logout</global-allowed-methods>
+	    <action name="randomCode" class="edu.cc.address.web.struts2.action.RandomCodeAction" method="create"></action>
+	    
+	    <!-- 与Spring整合后class的值为Action在spring容器中的key -->
+	    <action name="login_*" class="loginAction" method="{1}">
+	       <result name="input">/WEB-INF/pages/struts2/login.jsp</result>
+	       <!-- 跳转至AddressAction -->
+	       <result name="success" type="redirectAction">address_list</result>
+	    </action>
+	    
+	    <action name="address_*" class="addressAction" method="{1}">
+	        <result name="input">/WEB-INF/pages/struts2/addr_list.jsp</result>
+	        <result name="message">/WEB-INF/pages/struts2/message.jsp</result>
+	        <result name="add_input">/WEB-INF/pages/struts2/addr_add.jsp</result>
+	        <result name="edit_input">/WEB-INF/pages/struts2/addr_edit.jsp</result>
+	    </action>
+	    
+	</package>
+	
+</struts>

@@ -1,0 +1,91 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+   <!-- 打开自动扫描，会自动打开注解装配 -->
+   <context:component-scan base-package="edu.cc.address">
+   		<!-- 在struts2时将该配置删除 -->
+   		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+   </context:component-scan>
+     
+   <!-- 整合Hibernate --> 
+   <!-- 注册BeanFactoryPostProcessor完成配置信息中${}内容的替换 -->
+   <context:property-placeholder location="classpath:jdbc.properties"/>
+   <!-- 创建数据源 -->
+   <bean id="dataSource" 
+         class="org.apache.commons.dbcp.BasicDataSource" 
+         destroy-method="close"
+		 p:driverClassName="${jdbc.driverClassName}" 
+		 p:url="${jdbc.url}" 
+		 p:username="${jdbc.username}"
+		p:password="${jdbc.password}"/>  
+		
+	<!-- 创建SessionFactory -->	      
+   <bean id="sessionFactory" 
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+		  p:dataSource-ref="dataSource">
+		  
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<!-- <prop key="hibernate.generate_statistics">${hibernate.generate_statistics}</prop> -->
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+			</props>
+		</property>
+		
+		<!-- 映射文件 -->
+		<!-- 
+		<property name="appingResources">
+		   <array>
+		      <value>edu/cc/address/domain/User.hbm.xml</value>
+		      <value>edu/cc/address/domain/Group.hbm.xml</value>
+		      <value>edu/cc/address/domain/Address.hbm.xml</value>
+		   </array>
+		</property>
+		 -->
+		 <!-- 
+		 <property name="mappingDirectoryLocations">
+		    <array>
+		       <value>classpath:edu/cc/address/domain</value>
+		    </array>
+		 </property>
+	    -->
+	    <property name="packagesToScan">
+	       <value>edu.cc.address.domain</value>
+	    </property>
+	</bean> 
+   
+   <!-- 声明式的事务管理 -->
+   <bean id="transactionManager" 
+         class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+		 p:sessionFactory-ref="sessionFactory"/>   
+		 
+	  
+   <aop:config proxy-target-class="true">		
+		<aop:advisor pointcut="execution(* edu.cc.address.service.*.*(..))" advice-ref="txAdvice"/>	
+	</aop:config>
+	
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager"  >
+		<tx:attributes>
+			<tx:method name="save*" isolation="DEFAULT" propagation="REQUIRED" timeout="-1" read-only="false" />
+			<tx:method name="update*"/>
+			<tx:method name="delete*"/>
+			<tx:method name="*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	     
+</beans>
